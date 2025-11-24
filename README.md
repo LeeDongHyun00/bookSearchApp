@@ -4,7 +4,7 @@
 
 ## 📚 프로젝트 개요
 
-BookSearchApp v1 : 메인페이지 하드 코딩
+BookSearchApp v1 : 메인페이지 하드 코딩  
 BookSearchApp v2 : 도서 검색, 회원 관리, 관리자 기능을 제공하는 웹 애플리케이션입니다.
 사용자는 도서를 검색하고 리뷰를 작성할 수 있으며, 관리자는 회원과 도서를 관리할 수 있습니다.
 
@@ -544,3 +544,4 @@ mypage.jsp → UserWithdrawalServlet → index.jsp
 ---
 
 **마지막 업데이트**: 2025-11-24
+
