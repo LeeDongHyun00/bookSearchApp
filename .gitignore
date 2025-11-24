@@ -1,0 +1,29 @@
+# Database credentials
+db.properties
+**/db.properties
+
+# IDE specific files
+.metadata/
+.settings/
+.classpath
+.project
+*.iml
+.idea/
+
+# Build directories
+build/
+target/
+dist/
+
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Tomcat specific
+Servers/
