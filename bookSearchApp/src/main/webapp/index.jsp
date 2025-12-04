@@ -141,7 +141,7 @@
                                     </div>
                                 </div>
                                 <h3 class="font-bold text-gray-900 text-base mb-1 line-clamp-2 leading-tight group-hover:text-primary transition-colors">${b.title}</h3>
-                                <p class="text-gray-500 text-xs mb-3 truncate">${b.authorNames}</p>
+                                <p class="text-gray-500 text-xs mb-3">${b.authorNames}</p>
                                 <div class="mt-auto pt-3 border-t border-gray-50 flex justify-between items-center text-xs text-gray-400">
                                     <span>${b.publisher}</span>
                                     <!-- Review count hidden as requested -->

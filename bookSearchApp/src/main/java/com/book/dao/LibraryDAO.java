@@ -95,4 +95,30 @@ public class LibraryDAO {
         }
         return list;
     }
+
+
+
+    // 서재에서 책 삭제
+    public boolean removeFromLibrary(int libraryId, String userId) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        boolean result = false;
+        
+        try {
+            conn = DBUtil.getConnection();
+            String sql = "DELETE FROM 서재 WHERE 서재id = ? AND 사용자id = ?";
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, libraryId);
+            pstmt.setString(2, userId);
+            
+            int count = pstmt.executeUpdate();
+            if(count > 0) result = true;
+            
+        } catch(Exception e) {
+            e.printStackTrace();
+        } finally {
+            DBUtil.close(pstmt, conn);
+        }
+        return result;
+    }
 }

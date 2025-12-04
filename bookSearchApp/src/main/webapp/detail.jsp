@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ page import="com.book.dao.BookDAO" %>
 <%@ page import="com.book.dto.BookDTO" %>
+<%@ page import="com.book.dao.ReviewDAO" %>
 <%@ page import="com.book.dto.ReviewDTO" %>
 <%@ page import="com.book.dto.UserDTO" %>
 <%@ page import="java.util.List" %>
@@ -21,8 +22,43 @@
     }
     request.setAttribute("book", book);
     
-    // Session user is already available as ${sessionScope.user} or just ${user} if not shadowed
+    // Check if user has written a review
+    ReviewDTO myReview = null;
+    UserDTO user = (UserDTO) session.getAttribute("user");
+    if(user != null) {
+        ReviewDAO reviewDao = new ReviewDAO();
+        myReview = reviewDao.getReview(user.getUserId(), book.getIsbn());
+    }
+    request.setAttribute("myReview", myReview);
 %>
+
+<style>
+    /* Interactive Star Rating CSS */
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+    }
+    .star-rating input {
+        display: none;
+    }
+    .star-rating label {
+        cursor: pointer;
+        width: 30px;
+        height: 30px;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23d1d5db'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        transition: all 0.2s;
+    }
+    .star-rating input:checked ~ label,
+    .star-rating label:hover,
+    .star-rating label:hover ~ label {
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%23fbbf24' viewBox='0 0 24 24' stroke='%23fbbf24'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z'/%3e%3c/svg%3e");
+        transform: scale(1.1);
+    }
+</style>
 
 <div class="bg-gray-50 min-h-screen py-8">
     <div class="container mx-auto px-4 max-w-5xl">
@@ -40,7 +76,15 @@
                     <div class="mb-auto">
                         <div class="flex items-center gap-2 mb-4">
                             <span class="px-3 py-1 bg-blue-50 text-primary text-xs font-bold rounded-full">${book.categoryNames}</span>
-                            <div class="flex items-center text-yellow-400 text-sm font-bold">
+                            <c:choose>
+                                <c:when test="${book.ebook}">
+                                    <span class="px-3 py-1 bg-green-50 text-green-600 text-xs font-bold rounded-full">eBook 가능</span>
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="px-3 py-1 bg-gray-100 text-gray-500 text-xs font-bold rounded-full">eBook 불가능</span>
+                                </c:otherwise>
+                            </c:choose>
+                            <div class="flex items-center text-yellow-400 text-sm font-bold ml-auto">
                                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                                 ${book.rating} (${book.reviewCount}개의 리뷰)
                             </div>
@@ -69,28 +113,34 @@
             </div>
         </div>
 
-        <!-- 리뷰 작성 폼 -->
+        <!-- 리뷰 작성/수정 폼 -->
         <c:if test="${not empty sessionScope.user}">
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
-            <h3 class="text-xl font-bold text-gray-900 mb-6">리뷰 작성</h3>
-            <form action="addReview" method="post" class="space-y-4">
+            <h3 class="text-xl font-bold text-gray-900 mb-6">
+                ${not empty myReview ? '리뷰 수정' : '리뷰 작성'}
+            </h3>
+            <form action="${not empty myReview ? 'updateReview' : 'addReview'}" method="post" class="space-y-4">
                 <input type="hidden" name="isbn" value="${book.isbn}">
+                <c:if test="${not empty myReview}">
+                    <input type="hidden" name="reviewId" value="${myReview.reviewId}">
+                </c:if>
+                
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">평점</label>
-                    <select name="rating" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
-                        <option value="5">★★★★★ (5점)</option>
-                        <option value="4">★★★★☆ (4점)</option>
-                        <option value="3">★★★☆☆ (3점)</option>
-                        <option value="2">★★☆☆☆ (2점)</option>
-                        <option value="1">★☆☆☆☆ (1점)</option>
-                    </select>
+                    <div class="star-rating">
+                        <input type="radio" id="star5" name="rating" value="5" ${not empty myReview && myReview.rating == 5 ? 'checked' : ''} required /><label for="star5" title="5점"></label>
+                        <input type="radio" id="star4" name="rating" value="4" ${not empty myReview && myReview.rating == 4 ? 'checked' : ''} /><label for="star4" title="4점"></label>
+                        <input type="radio" id="star3" name="rating" value="3" ${not empty myReview && myReview.rating == 3 ? 'checked' : ''} /><label for="star3" title="3점"></label>
+                        <input type="radio" id="star2" name="rating" value="2" ${not empty myReview && myReview.rating == 2 ? 'checked' : ''} /><label for="star2" title="2점"></label>
+                        <input type="radio" id="star1" name="rating" value="1" ${not empty myReview && myReview.rating == 1 ? 'checked' : ''} /><label for="star1" title="1점"></label>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">내용</label>
-                    <textarea name="content" rows="3" required class="w-full border-gray-300 rounded-lg shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50" placeholder="이 책에 대한 생각을 남겨주세요..."></textarea>
+                    <textarea name="content" rows="3" required class="w-full border-gray-300 rounded-lg shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50" placeholder="이 책에 대한 생각을 남겨주세요...">${not empty myReview ? myReview.content : ''}</textarea>
                 </div>
                 <button type="submit" class="bg-primary text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors">
-                    리뷰 등록
+                    ${not empty myReview ? '리뷰 수정' : '리뷰 등록'}
                 </button>
             </form>
         </div>

@@ -260,4 +260,55 @@ public class BookDAO {
             DBUtil.close(rs, pstmt, null);
         }
     }
+
+    // 책 평점 및 리뷰 수 업데이트 (증분 방식)
+    public void updateBookRating(String isbn, int scoreDelta, int countDelta) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = DBUtil.getConnection();
+            
+            // 1. 현재 평점과 리뷰 수 조회
+            String selectSql = "SELECT 리뷰평균점수, 리뷰참가자수 FROM 책 WHERE ISBN = ?";
+            pstmt = conn.prepareStatement(selectSql);
+            pstmt.setString(1, isbn);
+            rs = pstmt.executeQuery();
+            
+            double currentAvg = 0.0;
+            int currentCount = 0;
+            
+            if(rs.next()) {
+                currentAvg = rs.getDouble("리뷰평균점수");
+                currentCount = rs.getInt("리뷰참가자수");
+            }
+            DBUtil.close(rs, pstmt, null);
+            
+            // 2. 새로운 값 계산
+            int newCount = currentCount + countDelta;
+            double newAvg = 0.0;
+            
+            if(newCount > 0) {
+                // (기존평균 * 기존수 + 점수변화량) / 새로운수
+                double totalScore = (currentAvg * currentCount) + scoreDelta;
+                newAvg = totalScore / newCount;
+                // 소수점 한자리 반올림
+                newAvg = Math.round(newAvg * 10) / 10.0;
+            }
+            
+            // 3. 업데이트
+            String updateSql = "UPDATE 책 SET 리뷰평균점수 = ?, 리뷰참가자수 = ? WHERE ISBN = ?";
+            pstmt = conn.prepareStatement(updateSql);
+            pstmt.setDouble(1, newAvg);
+            pstmt.setInt(2, newCount);
+            pstmt.setString(3, isbn);
+            pstmt.executeUpdate();
+            
+        } catch(Exception e) {
+            e.printStackTrace();
+        } finally {
+            DBUtil.close(rs, pstmt, conn);
+        }
+    }
 }
