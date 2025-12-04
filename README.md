@@ -111,6 +111,7 @@ CREATE TABLE 리뷰 (
 - 별을 drop down 선택에서 rate로 변경
 - ebook 여부 알려주는 요소 추가
 - 해당 책의 pdf나 ehub가 있으면(drm 없는 ehub 한정) 업로드하여 오디오북으로 만들어주는 기능
+- 리뷰점수가 데이터베이스에 반영되도록 수정 
 
 **mypage.jsp**
 
