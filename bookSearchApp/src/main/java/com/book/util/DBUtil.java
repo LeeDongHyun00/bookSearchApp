@@ -8,11 +8,11 @@ import java.sql.SQLException;
 
 public class DBUtil {
     // 로컬 MySQL 설정
-    private static final String HOST = "localhost";
-    private static final String PORT = "3306"; 
-    private static final String DB_NAME = "booksearchapp";
-    private static final String USER = "root";
-    private static final String PASS = "password";
+    private static final String HOST = "YOUR_LOCAH_HOST";
+    private static final String PORT = "YOUR_PORT";      
+    private static final String DB_NAME = "YOUT_DB_NAME";
+    private static final String USER = "YOUR_ID";       
+    private static final String PASS = "YOUR_PASSWORD"; 
     
     private static final String URL = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DB_NAME 
             + "?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true";

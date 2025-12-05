@@ -31,35 +31,47 @@ boolean isLoggedIn = username != null; %>
     <nav class="bg-white shadow-sm sticky top-0 z-50">
       <div class="container mx-auto px-4">
         <div class="flex justify-between items-center h-16">
-          <a href="index.jsp" class="flex items-center gap-3 group">
+          <a
+            href="index.jsp"
+            id="headerLogo"
+            class="flex items-center gap-3 group"
+          >
             <div
-              class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center transition-transform group-hover:scale-110">
+              class="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
+            >
               <span class="text-xl font-bold">B</span>
             </div>
             <span class="text-xl font-bold text-gray-900">BookSearch</span>
           </a>
           <% if(!isAdmin) { %>
-          <div class="flex-1 max-w-xl mx-8 hidden md:block">
+          <div
+            id="headerSearchBar"
+            class="flex-1 max-w-xl mx-8 hidden md:block transition-opacity duration-500"
+          >
             <form action="index.jsp" method="get" class="relative">
               <input
                 type="text"
                 name="q"
                 placeholder="도서명, 저자, 출판사 검색..."
                 value="${param.q}"
-                class="w-full px-4 py-2 rounded-full border border-gray-200 focus:border-primary focus:ring-2 focus:ring-blue-50 transition-all outline-none text-sm" />
+                class="w-full px-4 py-2 rounded-full border border-gray-200 focus:border-primary focus:ring-2 focus:ring-blue-50 transition-all outline-none text-sm"
+              />
               <button
                 type="submit"
-                class="absolute right-3 top-2.5 text-gray-400 hover:text-primary">
+                class="absolute right-3 top-2.5 text-gray-400 hover:text-primary"
+              >
                 <svg
                   class="w-5 h-5"
                   fill="none"
                   stroke="currentColor"
-                  viewBox="0 0 24 24">
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  ></path>
                 </svg>
               </button>
             </form>
