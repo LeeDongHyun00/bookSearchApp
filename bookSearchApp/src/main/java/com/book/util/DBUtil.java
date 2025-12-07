@@ -7,25 +7,50 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class DBUtil {
-    // 로컬 MySQL 설정
-    private static final String HOST = "YOUR_LOCAH_HOST";
-    private static final String PORT = "YOUR_PORT";      
-    private static final String DB_NAME = "YOUT_DB_NAME";
-    private static final String USER = "YOUR_ID";       
-    private static final String PASS = "YOUR_PASSWORD"; 
-    
-    private static final String URL = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DB_NAME 
-            + "?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true";
+    private static String HOST;
+    private static String PORT;
+    private static String DB_NAME;
+    private static String USER;
+    private static String PASS;
+    private static String URL;
+
+    static {
+        try (java.io.InputStream input = DBUtil.class.getClassLoader().getResourceAsStream("db.properties")) {
+            java.util.Properties prop = new java.util.Properties();
+            
+            if (input == null) {
+                System.err.println("Sorry, unable to find db.properties. Make sure it is in the classpath (src/main/resources).");
+                // Set default values or throw exception
+                HOST = "localhost";
+                PORT = "3306";
+                DB_NAME = "BookSearchApp";
+                USER = "root";
+                PASS = "";
+            } else {
+                prop.load(input);
+                HOST = prop.getProperty("HOST");
+                PORT = prop.getProperty("PORT");
+                DB_NAME = prop.getProperty("DB_NAME");
+                USER = prop.getProperty("USER");
+                PASS = prop.getProperty("PASS");
+            }
+            
+            URL = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DB_NAME 
+                + "?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true";
+                
+        } catch (java.io.IOException ex) {
+            ex.printStackTrace();
+        }
+    }
     
     public static Connection getConnection() {
         Connection conn = null;
         try {
             // 드라이버 로드
             Class.forName("com.mysql.cj.jdbc.Driver");
-            
+           
             // 연결 시도
             conn = DriverManager.getConnection(URL, USER, PASS);
-            System.out.println("Local DB Connection Success!");
             
         } catch(ClassNotFoundException e) {
             System.err.println("JDBC Driver not found: " + e.getMessage());

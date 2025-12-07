@@ -29,11 +29,6 @@ public class BookDAO {
             
             while(rs.next()) {
                 BookDTO dto = mapBook(rs);
-                // 목록에서는 저자 정보만 간단히 가져오거나, 필요시 조인해서 가져올 수 있음.
-                // 여기서는 성능을 위해 N+1 문제를 피하려면 조인을 해야하지만, 
-                // 간단하게 구현하기 위해 별도 메서드로 채우거나 일단 둠.
-                // 상세 정보는 getBook에서 처리.
-                // 목록 화면에서도 저자가 필요하므로 채워준다.
                 fillAuthors(conn, dto);
                 list.add(dto);
             }
@@ -113,13 +108,10 @@ public class BookDAO {
             conn = DBUtil.getConnection();
             StringBuilder sql = new StringBuilder("SELECT DISTINCT b.* FROM 책 b ");
             
-            // 카테고리 필터링이 있는 경우 조인 필요
             if (categoryIds != null && categoryIds.length > 0) {
                 sql.append("JOIN 책_카테고리 bc ON b.ISBN = bc.책id ");
             }
             
-            // 검색어가 있는 경우 저자 검색을 위해 조인 필요할 수 있음 (여기서는 간단히 책 정보에서만 검색하거나 서브쿼리 사용)
-            // 성능을 위해 저자 테이블 조인
             if (query != null && !query.trim().isEmpty()) {
                 sql.append("LEFT JOIN 책_저자 ba ON b.ISBN = ba.책id ");
                 sql.append("LEFT JOIN 저자 a ON ba.저자id = a.저자id ");
@@ -147,8 +139,6 @@ public class BookDAO {
             } else if ("rating".equals(sort)) {
                 sql.append("ORDER BY b.리뷰평균점수 DESC");
             } else {
-                // 기본값: 최신순 (출판일이 없으므로 ISBN이나 등록순으로 가정하거나 임의 정렬)
-                // DB 스키마에 출판일이 없으므로 ISBN 내림차순으로 대체
                 sql.append("ORDER BY b.ISBN DESC");
             }
             

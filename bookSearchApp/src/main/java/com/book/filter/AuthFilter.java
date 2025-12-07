@@ -22,15 +22,12 @@ public class AuthFilter implements Filter {
         HttpServletResponse res = (HttpServletResponse) response;
         HttpSession session = req.getSession(false);
 
-        System.out.println("[AuthFilter] Request URI: " + req.getRequestURI());
         boolean hasSession = (session != null);
         boolean hasUser = (hasSession && session.getAttribute("user") != null);
-        System.out.println("[AuthFilter] Has Session: " + hasSession + ", Has User: " + hasUser);
 
         if (hasUser) {
             chain.doFilter(request, response);
         } else {
-            System.out.println("[AuthFilter] Unauthorized access. Redirecting to login.");
             String requestedWith = req.getHeader("X-Requested-With");
             if ("XMLHttpRequest".equals(requestedWith)) {
                 res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "로그인이 필요합니다.");
