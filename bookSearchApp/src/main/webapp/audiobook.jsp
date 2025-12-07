@@ -487,16 +487,13 @@
     speedSelect.addEventListener('change', (e) => {
         playbackRate = parseFloat(e.target.value);
         
-        // If currently reading, restart current paragraph with new speed
+        // If currently reading, pause TTS (user can resume with new speed)
         if (isReading && !isPaused) {
-            isChangingSettings = true;
             window.speechSynthesis.cancel();
-            
-            // Small delay to ensure cancel completes
-            setTimeout(() => {
-                isChangingSettings = false;
-                speakParagraph(currentParagraphIndex);
-            }, 50);
+            isReading = false;
+
+            isPaused = false; 
+            updatePlayButton(false);
         }
     });
     
@@ -599,10 +596,13 @@
         };
         
         ttsUtterance.onerror = (e) => {
-            console.error('TTS Error:', e);
-            if (e.error !== 'interrupted') {
-                stopTTS();
+            // Ignore 'interrupted' errors (caused by speed changes or manual stops)
+            if (e.error === 'interrupted') {
+                return; // Silently ignore
             }
+            
+            console.error('TTS Error:', e);
+            stopTTS();
         };
 
         window.speechSynthesis.speak(ttsUtterance);

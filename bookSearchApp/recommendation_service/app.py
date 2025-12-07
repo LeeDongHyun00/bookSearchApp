@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
 from konlpy.tag import Okt
-import re # 정규표현식 모듈 추가
+import re
 
 app = Flask(__name__)
 CORS(app)
@@ -158,9 +158,36 @@ class BookRecommender:
                 
                 return " ".join(tokens)
             else:
-                # Fallback: 한글, 영어, 숫자만 남기고 제거
                 cleaned = re.sub(r'[^\w\s가-힣a-zA-Z]', ' ', text)
-                tokens = [t for t in cleaned.split() if t and len(t) > 1]
+                
+                # 포괄적인 조사 리스트
+                particles = [
+                    '으로부터', '로부터', '에서부터', '까지도',
+                    '되는', '하는', '된', '한', '했던', '할',
+                    '에서', '으로', '로', '에게', '한테',
+                    '은', '는', '이', '가', '을', '를', '에', '의', '도', '만', '부터', '까지'
+                ]
+                
+                tokens = []
+                for word in cleaned.split():
+                    if len(word) <= 1:
+                        continue
+                    
+                    # 반복해서 조사 제거 (최대 3회)
+                    for _ in range(3):
+                        removed = False
+                        for p in particles:
+                            if word.endswith(p) and len(word) > len(p) + 1:
+                                word = word[:-len(p)]
+                                removed = True
+                                break
+                        if not removed:
+                            break
+                    
+                    # 불용어 제거 및 추가
+                    if word not in self.stopwords and len(word) > 1:
+                        tokens.append(word)
+                
                 return " ".join(tokens)
         except Exception as e:
             print(f"Error in preprocess: {e}")
@@ -179,13 +206,12 @@ class BookRecommender:
         self.books_df['categories'] = self.books_df['categories'].fillna('')
         self.books_df['publisher'] = self.books_df['publisher'].fillna('')
         
-        # 가중치 조정 (책 제목 중요도 상향, 카테고리/출판사 추가)
-        # 감정 키워드는 주로 '책소개'에 있으므로 책소개의 비중을 유지하거나 늘림
+        # TF-IDF 가중치 조정
         self.books_df['content'] = (
-            (self.books_df['title'] + " ") * 3 +
+            (self.books_df['title'] + " ") * 2 +
             (self.books_df['categories'] + " ") * 2 +
-            (self.books_df['publisher'] + " ") * 1 + 
-            self.books_df['synopsis'] 
+            (self.books_df['synopsis'] + " ") * 2 +
+            (self.books_df['publisher'] + " ") * 1
         )
         
         print("Preprocessing content...")
@@ -235,7 +261,7 @@ class BookRecommender:
                 sim_score = 1 - distance
                 
                 # 유사도가 너무 낮으면(거리가 너무 멀면) 제외 (임계값 설정: 0.85 이상 거리면 무관할 확률 높음)
-                if distance > 0.1: 
+                if distance > 0.6: # 40% 미만 유사도 제거 
                     continue
 
                 book = self.books_df.iloc[idx]
