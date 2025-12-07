@@ -47,33 +47,73 @@ bookSearchApp/
 
 ## ⚙️ 설정 및 실행 (Configuration)
 
-### 1. 데이터베이스 설정 (필수)
+### 1. db.properties 설정 (필수)
 
-소스 코드 내에 DB 정보가 포함되지 않으므로, `src/main/resources/db.properties` 파일을 생성하여 아래와 같이 설정해야 합니다.
+애플리케이션은 `src/main/java/db.properties` 파일에서 데이터베이스 및 Flask 서버 설정을 읽어옵니다.
 
-**`src/main/resources/db.properties`**
+#### 📍 파일 위치
 
-```properties
-HOST=YOUR_HOST
-PORT=YOUR_PORT
-DB_NAME=YOUR_DB_NAME
-USER=YOUR_ID
-PASS=YOUR_PASSWORD
+```
+bookSearchApp/src/main/java/db.properties
 ```
 
-**참고 (Java Code Variable Mapping)**
+> ⚠️ **보안**: 이 파일은 `.gitignore`에 포함되어 있어 Git에 업로드되지 않습니다.
 
-```java
-private static final String HOST = "YOUR_LOCAH_HOST";
-private static final String PORT = "YOUR_PORT";
-private static final String DB_NAME = "YOUT_DB_NAME";
-private static final String USER = "YOUR_ID";
-private static final String PASS = "YOUR_PASSWORD";
+#### 📝 설정 항목
+
+**필수 항목 (데이터베이스 연결)**
+
+```properties
+HOST=localhost
+PORT=3306
+DB_NAME=BookSearchApp
+USER=your_id
+PASS=your_password
+```
+
+**선택 항목 (Flask 서버)**
+
+```properties
+# Python 명령어 (기본값: python3)
+PYTHON_CMD=python3
+
+# Flask 디렉토리 절대 경로 (자동 감지 실패 시에만 필요)
+FLASK_DIR=/absolute/path/to/bookSearchApp/recommendation_service
+```
+
+#### 💡 설정 예시
+
+**로컬 개발 환경**
+
+```properties
+HOST=localhost
+PORT=3306
+DB_NAME=BookSearchApp
+USER=your_id
+PASS=your_password
+
+# Flask Server Configuration
+PYTHON_CMD=python3
+FLASK_DIR=/Users/your_id/Desktop/bookSearchApp/bookSearchApp/recommendation_service
 ```
 
 ### 2. Python 추천 서버 실행
 
 챗봇 기능을 사용하기 위해서는 Flask 서버가 실행되어야 합니다.
+
+**방법 A: 자동 실행 (권장)**
+Tomcat 시작 시 Flask 서버가 **자동으로 실행**됩니다. 별도 설정 불필요!
+
+> **💡 자동 감지**: 시스템의 Python과 프로젝트 내 `recommendation_service` 폴더를 자동으로 찾습니다.
+
+필요시 `db.properties`에서 Python 명령어를 지정할 수 있습니다:
+
+```properties
+# Python 명령어 (선택, 기본값: python3)
+PYTHON_CMD=python3
+```
+
+**방법 B: 수동 실행**
 
 ```bash
 cd bookSearchApp/recommendation_service

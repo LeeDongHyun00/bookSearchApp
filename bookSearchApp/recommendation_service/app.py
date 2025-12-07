@@ -10,14 +10,43 @@ import re # 정규표현식 모듈 추가
 app = Flask(__name__)
 CORS(app)
 
-# Database Configuration
-DB_CONFIG = {
-    'host': 'localhost',
-    'port': 3307,
-    'user': 'root',
-    'password': '',
-    'database': 'BookSearchApp'
-}
+import os
+
+# Load Database Configuration from properties file
+def load_db_config():
+    config = {}
+    # Path to db.properties - Now in src/main/java/db.properties
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    properties_path = os.path.join(current_dir, '..', 'src', 'main', 'java', 'db.properties')
+    
+    try:
+        with open(properties_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    config[key.strip()] = value.strip()
+        
+        return {
+            'host': config.get('HOST', 'localhost'),
+            'port': int(config.get('PORT', 3306)),
+            'user': config.get('USER', 'root'),
+            'password': config.get('PASS', ''),
+            'database': config.get('DB_NAME', 'book_db')
+        }
+    except Exception as e:
+        print(f"Error loading db.properties: {e}")
+        # Return default fallback if file not found
+        return {
+            'host': 'localhost',
+            'port': 3306,
+            'user': 'root',
+            'password': '',
+            'database': 'BookSearchApp'
+        }
+
+DB_CONFIG = load_db_config()
+print(f"Loaded DB Config: Host={DB_CONFIG['host']}, DB={DB_CONFIG['database']}")
 
 class BookRecommender:
     def __init__(self):
@@ -206,7 +235,7 @@ class BookRecommender:
                 sim_score = 1 - distance
                 
                 # 유사도가 너무 낮으면(거리가 너무 멀면) 제외 (임계값 설정: 0.85 이상 거리면 무관할 확률 높음)
-                if distance > 0.8: 
+                if distance > 0.1: 
                     continue
 
                 book = self.books_df.iloc[idx]

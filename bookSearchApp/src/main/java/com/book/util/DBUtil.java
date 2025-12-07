@@ -14,25 +14,30 @@ public class DBUtil {
     private static String PASS;
     private static String URL;
 
+    private static java.util.Properties properties = new java.util.Properties();
+
     static {
-        try (java.io.InputStream input = DBUtil.class.getClassLoader().getResourceAsStream("db.properties")) {
-            java.util.Properties prop = new java.util.Properties();
+        try {
+            // Priority 1: Try root classpath (src/main/java/db.properties)
+            java.io.InputStream input = DBUtil.class.getClassLoader().getResourceAsStream("db.properties");
             
+            // Priority 2: Try /db.properties explicitly
             if (input == null) {
-                System.err.println("Sorry, unable to find db.properties. Make sure it is in the classpath (src/main/resources).");
-                // Set default values or throw exception
-                HOST = "localhost";
-                PORT = "3306";
-                DB_NAME = "BookSearchApp";
-                USER = "root";
-                PASS = "";
+                input = DBUtil.class.getResourceAsStream("/db.properties");
+            }
+
+            if (input == null) {
+                System.err.println("CRITICAL ERROR: Unable to find db.properties!");
+                System.err.println("Tried: classpath root and /db.properties");
+                // Default fallback
             } else {
-                prop.load(input);
-                HOST = prop.getProperty("HOST");
-                PORT = prop.getProperty("PORT");
-                DB_NAME = prop.getProperty("DB_NAME");
-                USER = prop.getProperty("USER");
-                PASS = prop.getProperty("PASS");
+                properties.load(input);
+                HOST = properties.getProperty("HOST");
+                PORT = properties.getProperty("PORT");
+                DB_NAME = properties.getProperty("DB_NAME");
+                USER = properties.getProperty("USER");
+                PASS = properties.getProperty("PASS");
+                input.close();
             }
             
             URL = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DB_NAME 
@@ -41,6 +46,10 @@ public class DBUtil {
         } catch (java.io.IOException ex) {
             ex.printStackTrace();
         }
+    }
+    
+    public static String getProperty(String key) {
+        return properties.getProperty(key);
     }
     
     public static Connection getConnection() {

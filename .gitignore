@@ -1,6 +1,7 @@
 # Database credentials
 db.properties
 **/db.properties
+src/main/java/db.properties
 
 # IDE specific files
 .metadata/
