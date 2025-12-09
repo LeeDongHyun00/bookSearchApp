@@ -247,8 +247,8 @@
                                         <c:forEach begin="1" end="${review.rating}">★</c:forEach>
                                     </div>
                                     <p class="text-gray-600 text-sm mb-4">${review.content}</p>
-                                    <div class="flex gap-2 justify-end">
-                                        <a href="detail.jsp?id=${review.bookId}" class="text-sm text-gray-500 hover:text-primary">수정</a>
+                                    <div class="flex gap-2 items-center justify-end">
+                                        <a href="detail.jsp?id=${review.bookId}" class="text-center text-sm text-gray-500 hover:text-primary">수정</a>
                                         <form action="deleteReview" method="post" style="display:inline;" onsubmit="return confirm('정말 삭제하시겠습니까?');">
                                             <input type="hidden" name="reviewId" value="${review.reviewId}">
                                             <button type="submit" class="text-sm text-red-500 hover:text-red-700">삭제</button>

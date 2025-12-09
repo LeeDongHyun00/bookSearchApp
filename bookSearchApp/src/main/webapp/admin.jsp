@@ -2,8 +2,10 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ page import="com.book.dao.UserDAO" %>
 <%@ page import="com.book.dao.BookDAO" %>
+<%@ page import="com.book.dao.ReviewDAO" %>
 <%@ page import="com.book.dto.UserDTO" %>
 <%@ page import="com.book.dto.BookDTO" %>
+<%@ page import="com.book.dto.ReviewDTO" %>
 <%@ page import="java.util.List" %>
 <jsp:include page="header.jsp" />
 
@@ -28,11 +30,27 @@
     List<BookDTO> books = bookDAO.getAllBooks();
     request.setAttribute("books", books);
     
-    int totalReviews = 0;
-    for(BookDTO b : books) {
-        totalReviews += b.getReviewCount();
-    }
+    // Get total review count directly from database
+    ReviewDAO showReviewDAO = new ReviewDAO();
+    int totalReviews = showReviewDAO.getTotalReviewCount();
     request.setAttribute("totalReviews", totalReviews);
+    
+    // Load reviews if viewing a specific user's reviews
+    String viewUserId = request.getParameter("viewUserId");
+    if(viewUserId != null && !viewUserId.isEmpty()) {
+        ReviewDAO reviewDAO = new ReviewDAO();
+        List<ReviewDTO> userReviews = reviewDAO.getReviewsByUser(viewUserId);
+        request.setAttribute("userReviews", userReviews);
+        request.setAttribute("viewUserId", viewUserId);
+        
+        // Get user nickname for display
+        for(UserDTO u : users) {
+            if(u.getUserId().equals(viewUserId)) {
+                request.setAttribute("viewUserName", u.getNickname());
+                break;
+            }
+        }
+    }
 %>
 
 <script>
@@ -48,6 +66,37 @@ function banUser(userId) {
         input.value = userId;
         
         form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function showUserReviews(userId, userName) {
+    window.location.href = 'admin.jsp?tab=users&viewUserId=' + encodeURIComponent(userId);
+}
+
+function closeReviewModal() {
+    window.location.href = 'admin.jsp?tab=users';
+}
+
+function deleteUserReview(reviewId, viewUserId) {
+    if(confirm('정말 이 리뷰를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = 'deleteReview';
+        
+        const reviewInput = document.createElement('input');
+        reviewInput.type = 'hidden';
+        reviewInput.name = 'reviewId';
+        reviewInput.value = reviewId;
+        
+        const redirectInput = document.createElement('input');
+        redirectInput.type = 'hidden';
+        redirectInput.name = 'redirect';
+        redirectInput.value = 'admin.jsp?tab=users&viewUserId=' + viewUserId;
+        
+        form.appendChild(reviewInput);
+        form.appendChild(redirectInput);
         document.body.appendChild(form);
         form.submit();
     }
@@ -238,6 +287,7 @@ function banUser(userId) {
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <button onclick="location.href='adminEditUser.jsp?userId=${u.userId}'" class="text-primary hover:text-blue-900 mr-3 font-medium">수정</button>
                                             <c:if test="${u.userId != 'admin'}">
+                                                <button onclick="showUserReviews('${u.userId}', '${u.nickname}')" class="text-purple-600 hover:text-purple-900 mr-3 font-medium">리뷰 관리</button>
                                                 <button onclick="banUser('${u.userId}')" class="text-red-600 hover:text-red-900 font-medium">추방</button>
                                             </c:if>
                                         </td>
@@ -247,6 +297,83 @@ function banUser(userId) {
                         </table>
                     </div>
                 </div>
+                
+                <!-- User Reviews Modal -->
+                <c:if test="${not empty viewUserId}">
+                    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="if(event.target === this) closeReviewModal()">
+                        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden" onclick="event.stopPropagation()">
+                            <!-- Modal Header -->
+                            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-purple-50 to-blue-50">
+                                <div>
+                                    <h2 class="text-2xl font-bold text-gray-900 mb-1">${viewUserName}님의 리뷰</h2>
+                                    <p class="text-sm text-gray-500">@${viewUserId} · 총 ${userReviews.size()}개의 리뷰</p>
+                                </div>
+                                <button onclick="closeReviewModal()" class="w-10 h-10 rounded-full hover:bg-gray-200 flex items-center justify-center transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-600">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                            
+                            <!-- Modal Body -->
+                            <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 140px);">
+                                <c:choose>
+                                    <c:when test="${empty userReviews}">
+                                        <div class="text-center py-12">
+                                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-400">
+                                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                                </svg>
+                                            </div>
+                                            <h3 class="text-lg font-semibold text-gray-900 mb-2">작성된 리뷰가 없습니다</h3>
+                                            <p class="text-sm text-gray-500">이 사용자는 아직 리뷰를 작성하지 않았습니다.</p>
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="space-y-4">
+                                            <c:forEach var="review" items="${userReviews}">
+                                                <div class="bg-gray-50 rounded-xl p-5 hover:bg-gray-100 transition-colors border border-gray-200">
+                                                    <div class="flex justify-between items-start mb-3">
+                                                        <div class="flex-1">
+                                                            <h4 class="text-lg font-bold text-gray-900 mb-2">${review.bookTitle}</h4>
+                                                            <div class="flex items-center gap-1 mb-3">
+                                                                <c:forEach begin="1" end="5" var="i">
+                                                                    <svg class="w-4 h-4 ${i <= review.rating ? 'text-yellow-400' : 'text-gray-300'}" fill="currentColor" viewBox="0 0 20 20">
+                                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                                                    </svg>
+                                                                </c:forEach>
+                                                                <span class="ml-2 text-sm font-semibold text-gray-700">${review.rating}.0</span>
+                                                            </div>
+                                                        </div>
+                                                        <button onclick="deleteUserReview(${review.reviewId}, '${viewUserId}')" class="text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-2 rounded-lg transition-colors font-medium text-sm">
+                                                            삭제
+                                                        </button>
+                                                    </div>
+                                                    <p class="text-gray-700 mb-3 leading-relaxed">${review.content}</p>
+                                                    <div class="flex items-center text-xs text-gray-500">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mr-1">
+                                                            <circle cx="12" cy="12" r="10"></circle>
+                                                            <polyline points="12 6 12 12 16 14"></polyline>
+                                                        </svg>
+                                                        ${review.regDate}
+                                                    </div>
+                                                </div>
+                                            </c:forEach>
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
+                            </div>
+                            
+                            <!-- Modal Footer -->
+                            <div class="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">
+                                <button onclick="closeReviewModal()" class="px-6 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-black transition-all font-medium shadow-lg">
+                                    닫기
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </c:if>
             </c:if>
 
             <c:if test="${tab eq 'books'}">
@@ -266,17 +393,16 @@ function banUser(userId) {
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">도서</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">저자</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">카테고리</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">평점</th>
-                                    <th class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">작업</th>
+                                    <th class="px-8 py-5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">도서</th>
+                                    <th class="px-8 py-5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">저자</th>
+                                    <th class="px-8 py-5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">평점</th>
+                                    <th class="px-8 py-5 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">작업</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-100">
                                 <c:forEach var="b" items="${books}">
                                     <tr class="hover:bg-gray-50 transition-colors">
-                                        <td class="px-6 py-4 whitespace-nowrap">
+                                        <td class="px-8 py-5 whitespace-nowrap">
                                             <div class="flex items-center">
                                                 <img src="${b.coverImage}" alt="" class="w-12 h-16 object-cover rounded-lg shadow-sm mr-3">
                                                 <div>
@@ -285,20 +411,17 @@ function banUser(userId) {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${b.authorNames}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">${b.categoryNames}</span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
+                                        <td class="px-8 py-5 whitespace-nowrap text-sm text-gray-600">${b.authorNames}</td>
+                                        <td class="px-8 py-5 whitespace-nowrap">
                                             <div class="flex items-center">
                                                 <svg class="w-4 h-4 text-yellow-400 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                                                 <span class="text-sm font-medium text-gray-900">${b.rating}</span>
                                                 <span class="text-xs text-gray-500 ml-1">(${b.reviewCount})</span>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button class="text-primary hover:text-blue-900 mr-3 font-medium">수정</button>
-                                            <button class="text-red-600 hover:text-red-900 font-medium">삭제</button>
+                                        <td class="px-8 py-5 whitespace-nowrap text-right text-sm font-medium">
+                                            <button onclick="location.href='adminEditBook.jsp?isbn=${b.isbn}'" class="text-primary hover:text-blue-900 mr-3 font-medium">수정</button>
+                                            <button onclick="deleteBook('${b.isbn}')" class="text-red-600 hover:text-red-900 font-medium">삭제</button>
                                         </td>
                                     </tr>
                                 </c:forEach>
@@ -306,6 +429,25 @@ function banUser(userId) {
                         </table>
                     </div>
                 </div>
+                
+                <script>
+                function deleteBook(isbn) {
+                    if(confirm('정말 이 도서를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = 'adminDeleteBook';
+                        
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'isbn';
+                        input.value = isbn;
+                        
+                        form.appendChild(input);
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                }
+                </script>
             </c:if>
         </main>
     </div>

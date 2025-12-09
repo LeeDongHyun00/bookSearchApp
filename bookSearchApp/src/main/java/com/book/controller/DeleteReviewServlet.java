@@ -27,6 +27,7 @@ public class DeleteReviewServlet extends HttpServlet {
         
         String reviewIdStr = request.getParameter("reviewId");
         String isbn = request.getParameter("isbn"); // For redirecting back to detail if needed
+        String redirect = request.getParameter("redirect"); // Custom redirect URL
         
         if(reviewIdStr != null) {
             int reviewId = Integer.parseInt(reviewIdStr);
@@ -34,11 +35,16 @@ public class DeleteReviewServlet extends HttpServlet {
             dao.deleteReview(reviewId);
         }
         
-        String referer = request.getHeader("Referer");
-        if(referer != null && referer.contains("detail.jsp") && isbn != null) {
-             response.sendRedirect("detail.jsp?id=" + isbn);
+        // Priority: custom redirect > referer with detail.jsp > mypage
+        if(redirect != null && !redirect.isEmpty()) {
+            response.sendRedirect(redirect);
         } else {
-             response.sendRedirect("mypage.jsp?tab=reviews");
+            String referer = request.getHeader("Referer");
+            if(referer != null && referer.contains("detail.jsp") && isbn != null) {
+                response.sendRedirect("detail.jsp?id=" + isbn);
+            } else {
+                response.sendRedirect("mypage.jsp?tab=reviews");
+            }
         }
     }
 }

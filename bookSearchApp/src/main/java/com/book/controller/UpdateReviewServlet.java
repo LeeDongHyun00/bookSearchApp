@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpSession;
 import com.book.dao.ReviewDAO;
 import com.book.dto.ReviewDTO;
 import com.book.dto.UserDTO;
+import com.book.util.WordFilterUtil;
 
 @WebServlet("/updateReview")
 public class UpdateReviewServlet extends HttpServlet {
@@ -31,6 +32,15 @@ public class UpdateReviewServlet extends HttpServlet {
         int rating = Integer.parseInt(request.getParameter("rating"));
         int reviewId = Integer.parseInt(request.getParameter("reviewId"));
         
+        String foundWord = WordFilterUtil.filter(content); 
+        
+        if (foundWord != null) {
+            String alertMessage = "리뷰 내용에 부적절한 단어 ('" + foundWord + "')가 포함되어 있습니다. 내용을 수정해주세요.";
+            session.setAttribute("alertMessage", alertMessage);
+
+            response.sendRedirect("detail.jsp?id=" + isbn);
+            return;
+        }
         ReviewDTO review = new ReviewDTO();
         review.setReviewId(reviewId);
         review.setBookId(isbn);

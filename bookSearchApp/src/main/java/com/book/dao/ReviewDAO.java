@@ -232,4 +232,27 @@ public class ReviewDAO {
         }
         return result;
     }
+    // 전체 리뷰 수 조회
+    public int getTotalReviewCount() {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        int count = 0;
+        
+        try {
+            conn = DBUtil.getConnection();
+            String sql = "SELECT COUNT(*) FROM 리뷰";
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            
+            if(rs.next()) {
+                count = rs.getInt(1);
+            }
+        } catch(Exception e) {
+            e.printStackTrace();
+        } finally {
+            DBUtil.close(rs, pstmt, conn);
+        }
+        return count;
+    }
 }

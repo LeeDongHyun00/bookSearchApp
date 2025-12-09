@@ -8,6 +8,20 @@
 <%@ page import="java.util.List" %>
 <jsp:include page="header.jsp" />
 
+<%-- 필터링 추가  --%>
+<c:if test="${not empty sessionScope.alertMessage}">
+    <script>
+        alert("${sessionScope.alertMessage}"); 
+    </script>
+    <c:remove var="alertMessage" scope="session"/>
+</c:if>
+<c:if test="${not empty sessionScope.successMessage}">
+    <script>
+        alert("${sessionScope.successMessage}"); 
+    </script>
+    <c:remove var="successMessage" scope="session"/>
+</c:if>
+
 <%
     String idStr = request.getParameter("id");
     BookDTO book = null;
@@ -60,118 +74,157 @@
     }
 </style>
 
-<div class="bg-gray-50 min-h-screen py-8">
-    <div class="container mx-auto px-4 max-w-5xl">
-        <a href="index.jsp" class="inline-flex items-center text-sm text-gray-500 hover:text-primary mb-6 transition-colors">
-            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-            목록으로 돌아가기
+<div class="bg-gray-50 min-h-screen py-10">
+    <!-- Hero Background Blur -->
+    <div class="fixed top-0 left-0 w-full h-[50vh] bg-gradient-to-b from-gray-200 to-gray-50 -z-10 opacity-50 pointer-events-none"></div>
+    
+    <div class="container mx-auto px-4 max-w-6xl">
+        <a href="index.jsp" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 mb-8 transition-colors group">
+            <svg class="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            돌아가기
         </a>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8 animate-fade-in">
-            <div class="grid md:grid-cols-[350px_1fr]">
-                <div class="bg-gray-100 p-8 flex items-center justify-center">
-                    <img src="${book.coverImage}" class="w-48 shadow-2xl rounded-lg transform hover:scale-105 transition-transform duration-500" alt="${book.title}">
+        <!-- Main Book Card -->
+        <div class="bg-white rounded-[2rem] shadow-xl border border-gray-100 overflow-hidden mb-12">
+            <div class="flex flex-col md:flex-row">
+                <!-- Cover Section -->
+                <div class="md:w-[400px] bg-gray-50 p-10 flex items-center justify-center relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors duration-500"></div>
+                    <img src="${book.coverImage}" class="w-64 md:w-72 shadow-2xl rounded-xl z-10 transform group-hover:scale-105 transition-transform duration-500" alt="${book.title}">
                 </div>
-                <div class="p-8 md:p-10 flex flex-col">
-                    <div class="mb-auto">
-                        <div class="flex items-center gap-2 mb-4">
-                            <span class="px-3 py-1 bg-blue-50 text-primary text-xs font-bold rounded-full">${book.categoryNames}</span>
-                            <c:choose>
-                                <c:when test="${book.ebook}">
-                                    <span class="px-3 py-1 bg-green-50 text-green-600 text-xs font-bold rounded-full">eBook 가능</span>
-                                </c:when>
-                                <c:otherwise>
-                                    <span class="px-3 py-1 bg-gray-100 text-gray-500 text-xs font-bold rounded-full">eBook 불가능</span>
-                                </c:otherwise>
-                            </c:choose>
-                            <div class="flex items-center text-yellow-400 text-sm font-bold ml-auto">
-                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                                ${book.rating} (${book.reviewCount}개의 리뷰)
+                
+                <!-- Info Section -->
+                <div class="flex-1 p-8 md:p-12 flex flex-col justify-center">
+                    <div class="mb-6">
+                        <div class="flex flex-wrap items-center gap-3 mb-4">
+                            <span class="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-lg tracking-wide uppercase">${book.categoryNames}</span>
+                            <c:if test="${book.ebook}">
+                                <span class="px-3 py-1 bg-gray-900 text-white text-xs font-bold rounded-lg tracking-wide uppercase">E-Book</span>
+                            </c:if>
+                        </div>
+                        
+                        <h1 class="text-4xl md:text-5xl font-black text-gray-900 mb-4 leading-tight tracking-tight">${book.title}</h1>
+                        <p class="text-xl text-gray-500 font-medium mb-8">${book.authorNames}</p>
+                        
+                        <div class="flex items-center gap-6 mb-8 py-6 border-y border-gray-100">
+                             <div class="flex flex-col">
+                                <span class="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">RATING</span>
+                                <div class="flex items-center text-yellow-400 text-xl font-bold">
+                                    <svg class="w-6 h-6 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                    ${book.rating}
+                                </div>
+                            </div>
+                            <div class="w-px h-10 bg-gray-200"></div>
+                            <div class="flex flex-col">
+                                <span class="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">REVIEWS</span>
+                                <span class="text-xl font-bold text-gray-900">${book.reviewCount}</span>
+                            </div>
+                            <div class="w-px h-10 bg-gray-200"></div>
+                            <div class="flex flex-col">
+                                <span class="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">PUBLISHER</span>
+                                <span class="text-lg font-bold text-gray-900">${book.publisher}</span>
                             </div>
                         </div>
-                        <h1 class="text-4xl font-bold text-gray-900 mb-2">${book.title}</h1>
-                        <p class="text-xl text-gray-600 mb-6">${book.authorNames}</p>
-                        
-                        <div class="prose text-gray-600 mb-8">
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">책 소개</h3>
+
+                        <div class="prose prose-lg text-gray-600 mb-8 max-w-none">
                             <p class="leading-relaxed">${book.synopsis}</p>
                         </div>
                     </div>
 
-                    <div class="flex gap-4 mt-6 pt-6 border-t border-gray-100">
+                    <div class="flex gap-4 mt-auto">
                         <form action="addToLibrary" method="post" class="flex-1">
                             <input type="hidden" name="isbn" value="${book.isbn}">
-                            <button type="submit" class="w-full bg-primary text-white py-3.5 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
+                            <button type="submit" class="w-full bg-gray-900 text-white py-4 rounded-xl font-bold hover:bg-black transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group">
+                                <svg class="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                                 내 서재에 담기
                             </button>
                         </form>
-                        <button class="px-6 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
-                            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></path></svg>
-                        </button>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- 리뷰 작성/수정 폼 -->
-        <c:if test="${not empty sessionScope.user}">
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
-            <h3 class="text-xl font-bold text-gray-900 mb-6">
-                ${not empty myReview ? '리뷰 수정' : '리뷰 작성'}
-            </h3>
-            <form action="${not empty myReview ? 'updateReview' : 'addReview'}" method="post" class="space-y-4">
-                <input type="hidden" name="isbn" value="${book.isbn}">
-                <c:if test="${not empty myReview}">
-                    <input type="hidden" name="reviewId" value="${myReview.reviewId}">
-                </c:if>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">평점</label>
-                    <div class="star-rating">
-                        <input type="radio" id="star5" name="rating" value="5" ${not empty myReview && myReview.rating == 5 ? 'checked' : ''} required /><label for="star5" title="5점"></label>
-                        <input type="radio" id="star4" name="rating" value="4" ${not empty myReview && myReview.rating == 4 ? 'checked' : ''} /><label for="star4" title="4점"></label>
-                        <input type="radio" id="star3" name="rating" value="3" ${not empty myReview && myReview.rating == 3 ? 'checked' : ''} /><label for="star3" title="3점"></label>
-                        <input type="radio" id="star2" name="rating" value="2" ${not empty myReview && myReview.rating == 2 ? 'checked' : ''} /><label for="star2" title="2점"></label>
-                        <input type="radio" id="star1" name="rating" value="1" ${not empty myReview && myReview.rating == 1 ? 'checked' : ''} /><label for="star1" title="1점"></label>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">내용</label>
-                    <textarea name="content" rows="3" required class="w-full border-gray-300 rounded-lg shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50" placeholder="이 책에 대한 생각을 남겨주세요...">${not empty myReview ? myReview.content : ''}</textarea>
-                </div>
-                <button type="submit" class="bg-primary text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors">
-                    ${not empty myReview ? '리뷰 수정' : '리뷰 등록'}
-                </button>
-            </form>
-        </div>
-        </c:if>
-
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-            <h3 class="text-xl font-bold text-gray-900 mb-6">리뷰 <span class="text-primary">${book.reviews.size()}</span></h3>
+        
+        <div class="grid lg:grid-cols-[1fr_400px] gap-8">
+            <!-- Reviews List -->
             <div class="space-y-6">
-                <c:forEach var="r" items="${book.reviews}">
-                <div class="flex gap-4 pb-6 border-b border-gray-50 last:border-0">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center text-primary font-bold flex-shrink-0">
-                        ${r.userName.substring(0,1)}
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-2xl font-bold text-gray-900">독자 리뷰</h3>
+                    <span class="text-sm font-bold text-gray-500">총 ${book.reviews.size()}개</span>
+                </div>
+                
+                <c:if test="${empty book.reviews}">
+                    <div class="bg-white rounded-2xl p-12 text-center border border-gray-100">
+                        <div class="text-gray-300 mb-4">
+                            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                        </div>
+                        <p class="text-gray-500">아직 작성된 리뷰가 없습니다.<br>첫 번째 리뷰어가 되어보세요!</p>
                     </div>
-                    <div class="flex-1">
-                        <div class="flex justify-between items-center mb-2">
-                            <h4 class="font-bold text-gray-900">${r.userName}</h4>
-                            <span class="text-xs text-gray-400">${r.regDate}</span>
+                </c:if>
+
+                <div class="grid gap-4">
+                    <c:forEach var="r" items="${book.reviews}">
+                        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 font-bold text-sm">
+                                        ${r.userName.substring(0,1)}
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-gray-900 text-sm">${r.userName}</div>
+                                        <div class="text-xs text-gray-400">${r.regDate}</div>
+                                    </div>
+                                </div>
+                                <div class="flex bg-yellow-50 px-2 py-1 rounded-lg">
+                                    <c:forEach begin="1" end="5" var="i">
+                                        <svg class="w-4 h-4 ${i <= r.rating ? 'text-yellow-400' : 'text-gray-200'}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                    </c:forEach>
+                                </div>
+                            </div>
+                            <p class="text-gray-600 leading-relaxed text-sm">${r.content}</p>
                         </div>
-                        <div class="flex text-yellow-400 text-sm mb-2">
-                            <c:forEach begin="1" end="5" var="i">
-                                <c:choose>
-                                    <c:when test="${i <= r.rating}">★</c:when>
-                                    <c:otherwise>☆</c:otherwise>
-                                </c:choose>
-                            </c:forEach>
-                        </div>
-                        <p class="text-gray-600 text-sm leading-relaxed">${r.content}</p>
+                    </c:forEach>
+                </div>
+            </div>
+
+            <!-- Write Review Form (Sticky) -->
+            <c:if test="${not empty sessionScope.user}">
+                <div class="lg:sticky lg:top-24 h-fit">
+                    <div class="bg-gray-900 text-white rounded-3xl p-8 shadow-xl relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl"></div>
+                        
+                        <h3 class="text-xl font-bold mb-6 relative z-10">
+                            ${not empty myReview ? '나의 리뷰 수정' : '리뷰 남기기'}
+                        </h3>
+                        
+                        <form action="${not empty myReview ? 'updateReview' : 'addReview'}" method="post" class="space-y-4 relative z-10">
+                            <input type="hidden" name="isbn" value="${book.isbn}">
+                             <c:if test="${not empty myReview}">
+                                <input type="hidden" name="reviewId" value="${myReview.reviewId}">
+                            </c:if>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wide">Rating</label>
+                                <div class="star-rating bg-white/10 p-3 rounded-xl inline-flex">
+                                    <input type="radio" id="star5" name="rating" value="5" ${not empty myReview && myReview.rating == 5 ? 'checked' : ''} required /><label for="star5" title="5점"></label>
+                                    <input type="radio" id="star4" name="rating" value="4" ${not empty myReview && myReview.rating == 4 ? 'checked' : ''} /><label for="star4" title="4점"></label>
+                                    <input type="radio" id="star3" name="rating" value="3" ${not empty myReview && myReview.rating == 3 ? 'checked' : ''} /><label for="star3" title="3점"></label>
+                                    <input type="radio" id="star2" name="rating" value="2" ${not empty myReview && myReview.rating == 2 ? 'checked' : ''} /><label for="star2" title="2점"></label>
+                                    <input type="radio" id="star1" name="rating" value="1" ${not empty myReview && myReview.rating == 1 ? 'checked' : ''} /><label for="star1" title="1점"></label>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wide">Comment</label>
+                                <textarea name="content" rows="4" required class="w-full bg-white/10 border border-white/10 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none text-sm" placeholder="이 책은 어떠셨나요? 감상을 공유해주세요.">${not empty myReview ? myReview.content : ''}</textarea>
+                            </div>
+                            
+                            <button type="submit" class="w-full bg-white text-gray-900 py-3.5 rounded-xl font-bold hover:bg-gray-100 transition-colors shadow-lg mt-2">
+                                ${not empty myReview ? '수정 완료' : '등록하기'}
+                            </button>
+                        </form>
                     </div>
                 </div>
-                </c:forEach>
-            </div>
+            </c:if>
         </div>
     </div>
 </div>
